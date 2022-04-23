@@ -1,37 +1,33 @@
+//Console raytracing
+//Originally from ArtemOnigiri, adapted for Linux
+
+//TODO: Rework things needing <windows.h> 
+//      Automatically get size of virtual terminal/framebuffer console
+
 #include <iostream>
 #include <stdio.h>
+#include <cstdlib>
 #include <math.h>
-#include <windows.h>
 #include "VecFunctions.h"
+#include <unistd.h>
+#define clrscr() printf("\e[1;1H\e[2J")
 
-void SetWindow(int Width, int Height)
-{
-	_COORD coord;
-	coord.X = Width;
-	coord.Y = Height;
-	_SMALL_RECT Rect;
-	Rect.Top = 0;
-	Rect.Left = 0;
-	Rect.Bottom = Height - 1;
-	Rect.Right = Width - 1;
-	HANDLE Handle = GetStdHandle(STD_OUTPUT_HANDLE);
-	SetConsoleScreenBufferSize(Handle, coord);
-	SetConsoleWindowInfo(Handle, TRUE, &Rect);
-}
-
-int main() {
-	int width = 120 * 2;
-	int height = 30 * 2;
-	SetWindow(width, height);
+int main(int argc, char *argv[]) {
+	if (argc != 3) 
+	{
+		std::cout << "Syntax: ./a.out [WIDTH] [HEIGHT]" << std::endl;		
+		return(1); 
+	}
+	clrscr();
+	int width = atoi(argv[1]);
+	int height = atoi(argv[2]);
 	float aspect = (float)width / height;
 	float pixelAspect = 11.0f / 24.0f;
 	char gradient[] = " .:!/r(l1Z4H9W8$@";
 	int gradientSize = std::size(gradient) - 2;
 
-	wchar_t* screen = new wchar_t[width * height];
-	HANDLE hConsole = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
-	SetConsoleActiveScreenBuffer(hConsole);
-	DWORD dwBytesWritten = 0;
+	char* screen = new char[width * height];
+	unsigned int linesWritten = 0;
 
 	for (int t = 0; t < 10000; t++) {
 		vec3 light = norm(vec3(-0.5, 0.5, -1.0));
@@ -82,7 +78,7 @@ int main() {
 				screen[i + j * width] = pixel;
 			}
 		}
-		screen[width * height - 1] = '\0';
-		WriteConsoleOutputCharacter(hConsole, screen, width * height, { 0, 0 }, &dwBytesWritten);
+		screen[width * height - 1] = '\n';
+		std::cout << screen;
 	}
 }
